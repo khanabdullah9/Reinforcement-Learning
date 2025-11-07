@@ -22,8 +22,8 @@ class GameBoard():
         self.player_x = None
         self.player_y = None
         self.player_deployed = False
-        self.goal_x = self.WIDTH - 100 #jugaad # since the model was trained on a grid 100x smaller
-        self.goal_y = self.HEIGHT - 100#jugaad
+        self.goal_x = self.WIDTH  #jugaad # since the model was trained on a grid 100x smaller
+        self.goal_y = self.HEIGHT #jugaad
         self.pre_trained_states = pre_trained_states
         self.speed = speed
         self.game_terminated = False
@@ -31,14 +31,11 @@ class GameBoard():
         pygame.font.init()
 
     def render_board(self):
-        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        self.screen = pygame.display.set_mode((self.WIDTH + self.offset, self.HEIGHT + self.offset))
         pygame.display.set_caption("Game Board")
         self.clock = pygame.time.Clock()
 
     def create_circle(self, x, y):
-        # Random velocity
-        # dx = random.choice([-3, -2, -1, 1, 2, 3])
-        # dy = random.choice([-3, -2, -1, 1, 2, 3])
         dx = random.choice([-1, 1])
         dy = random.choice([-1, 1])
         return {"x": x, "y": y, "r": self.RADIUS, "color": self.player_color, "dx": dx, "dy": dy}
@@ -175,11 +172,11 @@ class GameBoard():
         pygame.quit()
 
 if __name__ == "__main__":
-    pre_trained_states = np.load(os.path.join("pt_states","sarsa_q_obs1.npy"))
+    pre_trained_states = np.load(os.path.join("pt_states","sarsa_q.npy"))
 
-    game = GameBoard(1000, 500, 10, 
+    game = GameBoard(900, 400, 10, 
                      pre_trained_states, plot_obstacles = True,
-                     speed = 5)
+                     speed = 3)
     
     walls = [(20,30),(56,79),(456,341)]
     game.obstacles = game.create_obstacles(walls)
