@@ -26,8 +26,9 @@ class GameBoard():
         self.goal_y = self.HEIGHT - 100#jugaad
         self.pre_trained_states = pre_trained_states
         self.speed = speed
+        self.game_terminated = False
 
-        # self.render_board()
+        pygame.font.init()
 
     def render_board(self):
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
@@ -42,11 +43,19 @@ class GameBoard():
         dy = random.choice([-1, 1])
         return {"x": x, "y": y, "r": self.RADIUS, "color": self.player_color, "dx": dx, "dy": dy}
     
-    def create_obstacles(self, num=5):
+    def create_random_obstacles(self, num=5):
         obstacles = []
         for _ in range(num):
             x = random.randint(self.RADIUS, self.WIDTH - self.RADIUS)
             y = random.randint(self.RADIUS, self.HEIGHT - self.RADIUS)
+            obstacles.append((x, y, self.RADIUS))
+        return obstacles
+    
+    def create_obstacles(self, walls):
+        obstacles = []
+        for wall in walls:
+            x = wall[0]
+            y = wall[1]
             obstacles.append((x, y, self.RADIUS))
         return obstacles
 
@@ -78,11 +87,18 @@ class GameBoard():
             return -1, 0
         if action == 3: #right
             return 1,0
-            
+        
+    def display_text(self, text):
+        font = pygame.font.Font(None, 30)
+        text_surface = font.render(text, True, (255, 255, 255))
+        text_rect = text_surface.get_rect()
+        # text_rect.center = (self.WIDTH // 2, self.HEIGHT // 2)
+
+        return text_surface, text_rect
     
     def play(self):
         self.render_board()
-        self.obstacles = self.create_obstacles()
+        # self.obstacles = self.create_obstacles()
         running = True
 
         while running:
@@ -111,6 +127,9 @@ class GameBoard():
             cell_w = board_width / cols   # 100
             cell_h = board_height / rows  # 100
 
+            if self.game_terminated:
+                continue
+
             for c in self.circles:
                 curr_x, curr_y = c["x"], c["y"]
 
@@ -138,12 +157,15 @@ class GameBoard():
                 pygame.draw.circle(self.screen, c["color"], (int(c["x"]), int(c["y"])), c["r"])
 
                 if self.check_collision(c["x"], c["y"], c["r"]):
-                    print("GAME OVER!")
-                    running = False
+                    text_surface, text_rect = self.display_text("GAME OVER!")
+                    self.screen.blit(text_surface, text_rect)
+                    # running = False
+                    self.game_terminated = True
 
                 if self.player_won(c["x"], c["y"], c["r"]):
-                    print("Player won!")
-                    running = False
+                    text_surface, text_rect = self.display_text("Player won!")
+                    self.screen.blit(text_surface, text_rect)
+                    self.game_terminated = True
 
             pygame.display.flip()
             self.clock.tick(60)
@@ -153,10 +175,13 @@ class GameBoard():
         pygame.quit()
 
 if __name__ == "__main__":
-    pre_trained_states = np.load(os.path.join("pt_states","sarsa_q.npy"))
+    pre_trained_states = np.load(os.path.join("pt_states","sarsa_q_obs1.npy"))
 
     game = GameBoard(1000, 500, 10, 
-                     pre_trained_states, plot_obstacles = False,
+                     pre_trained_states, plot_obstacles = True,
                      speed = 5)
+    
+    walls = [(20,30),(56,79),(456,341)]
+    game.obstacles = game.create_obstacles(walls)
     game.play()
 
